@@ -1,0 +1,3 @@
+defmodule RefluxEventbrokerReactPhoenixElixir.LayoutViewTest do
+  use RefluxEventbrokerReactPhoenixElixir.ConnCase, async: true
+end
