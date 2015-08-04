@@ -1,4 +1,12 @@
 import {Socket} from "phoenix"
+//import Reflux from "bower_components/reflux/dist/reflux"
+//import React from "bower_components/react/react";
+import MyDiv from "./MyDiv";
+
+React.render(
+  <MyDiv />,
+  document.getElementById("mydiv")
+);
 
 // let socket = new Socket("/ws")
 // socket.connect()
