@@ -7,7 +7,7 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
 config :reflux_eventbroker_react_phoenix_elixir, RefluxEventbrokerReactPhoenixElixir.Endpoint,
-  http: [port: 4000],
+  http: [port: 7777],
   debug_errors: true,
   code_reloader: true,
   cache_static_lookup: false,
