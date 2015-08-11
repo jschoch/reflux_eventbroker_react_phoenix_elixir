@@ -10,7 +10,8 @@ export default React.createClass({
         return (
         <div className="panel panel-default">
  <div className="panel-heading">Status</div>
-  <div className="panel-body">Current Users: <span className="badge">{this.state.user_count}</span> Hits: <span className="badge">{this.state.hits}</span></div>
+  <div className="panel-body">
+    Current Users: {this.users} <span className="badge">{this.state.user_count}</span> Hits: <span className="badge">{this.state.hits}</span></div>
  </div>
         );
     }

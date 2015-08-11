@@ -1,10 +1,12 @@
 defmodule PubChannel do
   require Logger
   use Phoenix.Channel
-  def join("all",%{pass: "the magic word"} = payload,socket) do
-    socket = Phoenix.Socket.assign(socket, :user, payload.user)
-    LogAgent.login(payload.user)
-    Logger.info "User #{payload.user} logged in"
+  #def join("all",%{pass: "the magic word"} = payload,socket) do
+  def join("all",_,socket) do
+    user = socket.assigns.user
+    #socket = Phoenix.Socket.assign(socket, :user, socket.assigns.user)
+    LogAgent.login(user)
+    Logger.info "User #{user} logged in"
     # we can't broadcast from here so we call to handle_info
     send self,:status_update
     {:ok,"welcome",socket}
@@ -12,6 +14,7 @@ defmodule PubChannel do
   
   def join("all",s,socket) do
     Logger.error("unkown key: " <> inspect s) 
+    Logger.error("caused key erro: " <> inspect socket, pretty: true)
     {:error, %{reason: "unauthorized"}}
   end
   def handle_info(:status_update,socket) do
@@ -21,6 +24,10 @@ defmodule PubChannel do
   end
   def handle_in("msg",%{"user" => user} = payload,socket) do
     Logger.info "payload: " <> inspect payload
+    {:noreply,socket}
+  end
+  def handle_in("status_users",stuff,socket) do
+    Logger.info "status_users: #{inspect stuff}"
     {:noreply,socket}
   end
   def handle_in("ping",%{"ping" =>  _},socket) do
