@@ -5,6 +5,7 @@ defmodule RefluxEventbrokerReactPhoenixElixir.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_flash
+    plug :put_secure_browser_headers
     plug :protect_from_forgery
   end
 

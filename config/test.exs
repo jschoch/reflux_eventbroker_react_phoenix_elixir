@@ -7,4 +7,4 @@ config :reflux_eventbroker_react_phoenix_elixir, RefluxEventbrokerReactPhoenixEl
   server: false
 
 # Print only warnings and errors during test
-config :logger, level: :warn
+config :logger, level: :debug

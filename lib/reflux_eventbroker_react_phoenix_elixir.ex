@@ -9,6 +9,7 @@ defmodule RefluxEventbrokerReactPhoenixElixir do
     children = [
       # Start the endpoint when the application starts
       supervisor(RefluxEventbrokerReactPhoenixElixir.Endpoint, []),
+      worker(LogAgent,[])
       # Here you could define other workers and supervisors as children
       # worker(RefluxEventbrokerReactPhoenixElixir.Worker, [arg1, arg2, arg3]),
     ]

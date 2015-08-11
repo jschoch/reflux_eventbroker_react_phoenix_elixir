@@ -1,14 +1,8 @@
-defmodule RefluxEventbrokerReactPhoenixElixir.UserSocket do
+defmodule Reflux.PubChatSocket do
   require Logger
   use Phoenix.Socket
-
-  ## Channels
-  # channel "rooms:*", RefluxEventbrokerReactPhoenixElixir.RoomChannel
-  #channel "all", PubChannel
-
-  ## Transports
+  #channel "all",PubChannel 
   transport :websocket, Phoenix.Transports.WebSocket
-  # transport :longpoll, Phoenix.Transports.LongPoll
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
@@ -19,7 +13,7 @@ defmodule RefluxEventbrokerReactPhoenixElixir.UserSocket do
   #
   #  To deny connection, return `:error`.
   def connect(params, socket) do
-    Logger.info "Connect to UserSocket with params: #{inspect params}"
+    Logger.info "PARAMS: \n " <> inspect params
     {:ok, socket}
   end
 
@@ -33,6 +27,9 @@ defmodule RefluxEventbrokerReactPhoenixElixir.UserSocket do
   #     RefluxEventbrokerReactPhoenixElixir.Endpoint.broadcast("users_socket:" <> user.id, "disconnect", %{})
   #
   # Returning `nil` makes this socket anonymous.
-  def id(_socket), do: nil
-  #def id(socket), do: "users_socket:#{socket.assigns.user_id}"
+  #def id(_socket), do: nil
+  def id(socket) do
+    Logger.info("id called")
+   "users_socket:#{socket.assigns.user_id}"
+  end
 end

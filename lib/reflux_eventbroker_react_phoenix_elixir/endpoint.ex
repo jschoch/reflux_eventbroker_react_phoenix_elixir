@@ -2,6 +2,8 @@ defmodule RefluxEventbrokerReactPhoenixElixir.Endpoint do
   use Phoenix.Endpoint, otp_app: :reflux_eventbroker_react_phoenix_elixir
 
   socket "/socket", RefluxEventbrokerReactPhoenixElixir.UserSocket
+  socket "/status",Reflux.PubChatSocket
+  #Reflux.PubChatSocket
 
   # Serve at "/" the static files from "priv/static" directory.
   #

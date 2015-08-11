@@ -2,6 +2,7 @@
 //import Reflux from "bower_components/reflux/dist/reflux";
 import BtnA from "./components/BtnA"
 import BtnB from "./components/BtnB"
+import UserStatus from "./components/UserStatus"
 import Actions from "./Actions"
 import TheStore from "./stores/TheStore"
 
@@ -12,6 +13,7 @@ export default React.createClass({
         return (
             <div> This holds our buttons! <br />
                 <BtnA />  <BtnB />
+                <UserStatus />
             </div>
         )
     }
