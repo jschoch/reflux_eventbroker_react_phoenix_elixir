@@ -3,8 +3,8 @@ defmodule RefluxEventbrokerReactPhoenixElixir.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "rooms:*", RefluxEventbrokerReactPhoenixElixir.RoomChannel
-  #channel "all", PubChannel
+  channel "rooms:*", RefluxEventbrokerReactPhoenixElixir.RoomChannel
+  channel "all", PubChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket, check_origin: false
@@ -34,5 +34,5 @@ defmodule RefluxEventbrokerReactPhoenixElixir.UserSocket do
   #
   # Returning `nil` makes this socket anonymous.
   def id(_socket), do: nil
-  #def id(socket), do: "users_socket:#{socket.assigns.user_id}"
+  #def id(socket), do: "users_socket:#{socket.assigns.user}"
 end

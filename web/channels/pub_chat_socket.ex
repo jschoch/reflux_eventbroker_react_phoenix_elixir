@@ -29,8 +29,8 @@ defmodule Reflux.PubChatSocket do
   #     RefluxEventbrokerReactPhoenixElixir.Endpoint.broadcast("users_socket:" <> user.id, "disconnect", %{})
   #
   # Returning `nil` makes this socket anonymous.
-  def id(_socket), do: nil
-  def id_defunct(socket) do
+  #def id(_socket), do: nil
+  def id(socket) do
     Logger.info("id called" <> inspect socket, pretty: true)
    "users_socket:#{socket.assigns.user}"
   end
