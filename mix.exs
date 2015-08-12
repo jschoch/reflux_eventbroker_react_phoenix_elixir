@@ -30,7 +30,8 @@ defmodule RefluxEventbrokerReactPhoenixElixir.Mixfile do
   defp deps do
     [{:phoenix, "~> 0.16"},
      {:phoenix_html, "~> 1.4"},
-     {:phoenix_live_reload, "~> 0.6", only: :dev},
+     #{:phoenix_live_reload, "~> 0.6", only: :dev},
+    {:phoenix_live_reload, github: "phoenixframework/phoenix_live_reload"},
      {:cowboy, "~> 1.0"}]
   end
 end

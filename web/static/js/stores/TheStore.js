@@ -7,10 +7,11 @@ export default Reflux.createStore({
 
   init() {
     this.test = true;
-    //this.socket = new Phoenix.Socket("/socket",{user: "me",pass: "the magic word"});
     this.socket = new Phoenix.Socket("/status",{logger: (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }})
     var r = Math.floor((Math.random() * 1000) + 1);
-    this.auth = {user: "me"+r,pass: "the magic word"}
+    this.me = "me"+r
+
+    this.auth = {user: this.me,pass: "the magic word"}
     this.socket.connect(this.auth)
     this.socket.onOpen(this.onOpen)
     this.socket.onError(this.onError)
@@ -51,6 +52,9 @@ export default Reflux.createStore({
     //chan.on("status_user", data => {
       //console.log("event",data);
     //});
+  },
+  onHit(){
+    this.user_chan.push("hit","hit")
   },
   onSwap(x){
     console.log("switch triggered in: ",x)

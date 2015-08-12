@@ -1,7 +1,7 @@
 defmodule LogAgent do
   @doc "starts the agent with a starter Map"
   def start_link do
-    map = %{users: [],user_count: 0, msgs: []} 
+    map = %{users: [],user_count: 0, msgs: [],hits: 0} 
     Agent.start_link(fn -> map end, name: __MODULE__)
   end
   
@@ -50,5 +50,8 @@ defmodule LogAgent do
   end
   def bcast do
     IO.puts "SOMETHING CHANGED!"
+  end
+  def hit do
+    Agent.update(__MODULE__, &Map.put(&1,:hits,&1.hits + 1))
   end
 end

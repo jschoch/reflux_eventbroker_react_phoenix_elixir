@@ -3,7 +3,7 @@ defmodule RefluxEventbrokerReactPhoenixElixir.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  channel "rooms:*", RefluxEventbrokerReactPhoenixElixir.RoomChannel
+  channel "rooms:lobby", LobbyChannel
   channel "all", PubChannel
 
   ## Transports
