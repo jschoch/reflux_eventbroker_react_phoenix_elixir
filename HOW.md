@@ -103,3 +103,101 @@ Back to our Agent...
   end
 ```
 
+The rest of the agent is pretty straight forward if you understand the partial application syntax.
+
+### Setup phoenix channels and sockets
+
+Step one here is to look at our endpoint, and ensure we have our sockets mapped correctly.
+
+> [lib/reflux_eventbroker_react_phoenix_elixir/endpoint.ex](https://github.com/jschoch/reflux_eventbroker_react_phoenix_elixir/blob/e24436af6e55cd50a177c775a62b71c5937780f0/lib/reflux_eventbroker_react_phoenix_elixir/endpoint.ex)
+
+```elixir
+defmodule RefluxEventbrokerReactPhoenixElixir.Endpoint do
+  use Phoenix.Endpoint, otp_app: :reflux_eventbroker_react_phoenix_elixir
+
+  # commenting this out caused me all kinds of problems.  Seems to be some leftover assumptions this exists.
+  socket "/socket", RefluxEventbrokerReactPhoenixElixir.UserSocket
+  
+  # this plumbs our socket path to our Socket functions in web/channels/pub_chat_socket.ex
+  socket "/status",Reflux.PubChatSocket
+  
+# SNIP
+```
+
+> [web/channels/pub_chat_socket.ex](https://github.com/jschoch/reflux_eventbroker_react_phoenix_elixir/blob/e24436af6e55cd50a177c775a62b71c5937780f0/web/channels/pub_chat_socket.ex)
+
+Phoenix web sockets break things into sockets and channels.  Sockets allow you to manage connections and authenticate a particular websocket path.  They also allow you to manage the transport.
+
+``` elixir
+defmodule Reflux.PubChatSocket do
+  require Logger
+  use Phoenix.Socket
+  
+  # Defines our channel name, and what Elixir module will be used to control it, PubChannel in this case
+  
+  channel "all",PubChannel 
+  
+  # Defines the transport, and if we need to check the host origin.  Check origin is useful if you want to limit access to your sockets to certain hosts
+  
+  transport :websocket, Phoenix.Transports.WebSocket, check_origin: false
+
+  # connect parses our connection parameters from our client.  using phoenix.js this is socket.connect(params);
+  # we also use Phoenix.Socket.assign/3 to embed our user and pass into the socket struct, which gets passed along to out channel.
+  
+  def connect(params, socket) do
+    Logger.info "PARAMS: \n " <> inspect params
+    socket = assign(socket, :user, params["user"])
+    socket = assign(socket, :pass, params["pass"])
+    {:ok,socket}
+  end
+
+  # id allows us to broadcast to all users with a particular id.  I'm not using this in this revision.
+  
+  def id(socket) do
+    Logger.info("id called" <> inspect socket, pretty: true)
+   "users_socket:#{socket.assigns.user}"
+  end
+end
+```
+
+So now we have our channel "all" mapped to our channel logic.
+
+> [web/channels/pub_channel.ex](https://github.com/jschoch/reflux_eventbroker_react_phoenix_elixir/blob/e43834e3129cd8538fef083e642f9db5da9bb0db/web/channels/pub_channel.ex)
+
+* join/3 : manages client join requests
+* handle_info/2 : manages our state update broadcasts
+* handle_in/3 : manages any messages sent to the channel after join has completed successfully 
+* terminate/2 : manages when a websocket connection is no longer active
+
+Channels use the [behaviour pattern](http://elixir-lang.org/getting-started/typespecs-and-behaviours.html#behaviours).  Behaviours allow us structure and composition.  They are most heavily used in OTP patterns like GenServer.  Behaviours generally lean heavily on pattern matching in function definition, which is worth of discussion for folks new to Elixir.
+
+Take the following definitions
+```elixir
+defmodule Foo do
+    #1
+    def bar(:atom) do
+        "got an atom"
+    end
+    #2
+    def bar({a,b}) do
+        "got a 2 tuple with varriables a and b assigned the arg's tuple values"
+    end
+    #3
+    def bar(%{foo: foo} = arg) do
+        "got a map with a key of :foo, interpolated into the varriable 'foo', and the full map assigned to 'arg'"
+    end
+    #4
+    def bar(%{"foo" => foo} = arg) do
+        "foo key was a binary"
+    end
+    #5
+    def bar(any) do
+        any
+    end
+end
+```
+Elixir will take any call to Foo.bar(arg) and try to see if the argument fits a definition.  This works top to bottom.  The last case #5 will match any call to Foo.bar/1.  Having a catch all can be useful in debugging to detect and crash when you have unexpected input.  Example #1 will only match for Foo.bar(:atom).  Example #2 will only match a 2 element tuple.  Examaple #3 is much more interesting and powerful.
+
+Elixir map pattern matching allows you to look inside the argument and use different function definitions based on the keys of the map.  In this case we will only match #3 if we use a map as an argument, and that map has a key of :foo.  If we want access to the rest of the map we can use the arg varriable.  We can pass any map containing the key :foo %{foo: 1,bar: 2} will match, but %{"foo" => 1} will match #4 because the key is a binary (string).  When you are serializing data to javascript it is best to use binaries as strings.  Binaries also have very powerful pattern matching capabilites you may wan to explore.
+
+For phoenix channels we need join/3, and handle_in at a minimum.
