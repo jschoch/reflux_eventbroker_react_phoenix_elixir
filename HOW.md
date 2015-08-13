@@ -447,3 +447,5 @@ export default React.createClass({
 })
 
 ```
+
+That shoudl be it!  A working example can be found at [http://dev.brng.us](http://dev.brng.us)
