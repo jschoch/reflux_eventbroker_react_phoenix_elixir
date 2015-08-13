@@ -278,3 +278,172 @@ Finally for our Channel we need to handle clients leaving.  We define terminate/
   end
 ```
 
+
+### reflux phoenix websocket client
+
+Now that we have our server all wired up to talk to clients, we can dig into the client code.  Reflux will be managing all data from the server, and the react components will send their updates to the server which end up propegating back down to reflux to update our state.  
+
+First we add a new action called "hit"
+
+> [web/static/js/Actions.js](https://github.com/jschoch/reflux_eventbroker_react_phoenix_elixir/blob/e43834e3129cd8538fef083e642f9db5da9bb0db/web/static/js/Actions.js)
+
+```js
+export default Reflux.createActions([
+  "swap",
+  "hit"
+]);
+```
+
+Next we update our reflux store to connect to phoenix
+
+> [web/static/js/stores/TheStore.js](https://github.com/jschoch/reflux_eventbroker_react_phoenix_elixir/blob/e43834e3129cd8538fef083e642f9db5da9bb0db/web/static/js/stores/TheStore.js)
+
+```js
+import Actions from "../Actions";
+
+export default Reflux.createStore({
+  // binds our onSwap and onHit functions
+  listenables: Actions,
+
+  init() {
+    this.test = true;
+    
+    // no logging
+    //this.socket = new Phoenix.Socket("/status")
+    
+    // This creates our socket and sets up logging as an option
+    this.socket = new Phoenix.Socket("/status",{logger: (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }})
+    
+    // lazily create a semi unique username
+    var r = Math.floor((Math.random() * 1000) + 1);
+    this.me = "me"+r
+
+    // these are our auth params which get sent to both connect/2 in our phoenix socket and join/3 in our phoenix channel
+    this.auth = {user: this.me,pass: "the magic word"}
+    
+    // this maps our params to our socket object
+    this.socket.connect(this.auth)
+    
+    // callbacks for varrious socket events
+    this.socket.onOpen(this.onOpen)
+    this.socket.onError(this.onError)
+    this.socket.onClose(this.onClose)
+    
+    // configure our channel for "all"
+    this.user_chan = this.socket.channel("all")
+    console.log("chan", this.user_chan)
+    
+    // bind a function to any message with an event called "status_users"
+    this.user_chan.on("status_users",data => {
+      console.log("chan on hook",data);
+      
+      // blindy push data from server into our state
+      this.onUpdate(data)
+    })
+    
+    // this is what actually joins the "all" channel.  When the server responds "ok" and the join is successful we can 
+    // drive other events, we just log it here.
+    this.user_chan.join(this.auth).receive("ok", chan => {
+      console.log("joined")
+     })
+     // callback for any errors caused by our join request
+     .receive("error", chan => {
+        console.log("error",chan);
+    })
+  },
+  // pass our init() to React's state
+  getInitialState(){
+    return this;
+  },
+  onOpen(thing){
+    console.log("onOpen",thing, this)
+  },
+  onClose(){
+    console.log("onClose")
+  },
+  onError(){
+    console.log("onError") 
+  },
+  onUpdate(update){
+    console.log("update",update);
+    console.log("this",this);
+    
+    // trigger is what will push our new state to React
+    this.trigger(update)
+  },
+  // This is bound by our Actions.js.  it pushes a message to handle_in("hit","hit",socket) which increments a hit counter
+  // this is triggered in our onClick handler for BtnA and BtnB
+  onHit(){
+    this.user_chan.push("hit","hit")
+  },
+  // our old swap action
+  onSwap(x){
+    console.log("switch triggered in: ",x)
+    console.log("TheStore test is",this.test)
+    this.trigger({test: !x})
+  }
+})
+```
+
+We add a new component to handle our user status data
+
+> [web/static/js/components/UserStatus.js](https://github.com/jschoch/reflux_eventbroker_react_phoenix_elixir/blob/e43834e3129cd8538fef083e642f9db5da9bb0db/web/static/js/components/UserStatus.js)
+
+```jsx
+import TheStore from "../stores/TheStore"
+
+export default React.createClass({
+
+  // wire in our reflux store
+  mixins: [Reflux.connect(TheStore)],
+    
+    // initial values in case the server is not connecting
+    getInitialState(){
+        return({user_count: 0, hits: 0, users: []} )
+    },
+    render: function() {
+        var doItem = function(item){
+          return (<span> name: {item} </span>)
+        }
+        return (
+            <div className="panel panel-default">
+                <div className="panel-heading">
+                    Status: me: {this.state.me} -- hits: <span clasName="badge">{this.state.hits}</span> 
+                </div>
+                <div className="panel-body">
+                    Current Users: {this.state.users.map(doItem)} <span className="badge">{this.state.user_count}</span> 
+                    Hits: <span className="badge">{this.state.hits}</span>
+                </div>
+            </div>
+        );
+    }
+});
+```
+Finally we can update our BtnA and BtnB components.  They are very much the same, so I'll only walk through one.
+
+``` js
+import Actions from "../Actions"
+import TheStore from "../stores/TheStore"
+
+export default React.createClass({
+    mixins: [Reflux.connect(TheStore)],
+    getInitialState(){
+        return {"name":"BtnA"};
+    },
+    handleClick(){
+      console.log(this.state.name,"clicked",this.state.test);
+      Actions.swap(this.state.test)
+      
+      // This triggers our onHit function in TheStore.js which pushes our event up to phoenix
+      Actions.hit();
+    },
+    render(){
+        return (
+            <button className="btn btn-danger" onClick={this.handleClick}> 
+                This is {this.state.name}: val: {this.state.test.toString()} 
+            </button>
+        )
+    }
+})
+
+```
