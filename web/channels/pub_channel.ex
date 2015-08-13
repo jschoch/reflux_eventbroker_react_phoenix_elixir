@@ -12,9 +12,8 @@ defmodule PubChannel do
     {:ok,"welcome",socket}
   end
   
-  def join("all",s,socket) do
-    Logger.error("unkown key: " <> inspect s) 
-    Logger.error("caused key erro: " <> inspect socket, pretty: true)
+  def join(any,s,socket) do
+    Logger.error("unkown channel: #{inspect any} for assigns #{inspect socket.assigns}") 
     {:error, %{reason: "unauthorized"}}
   end
   def handle_info(:status_update,socket) do

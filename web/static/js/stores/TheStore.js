@@ -1,6 +1,4 @@
-//import Reflux from "bower_components/reflux/dist/reflux";
 import Actions from "../Actions";
-  
 
 export default Reflux.createStore({
   listenables: Actions,
@@ -10,7 +8,6 @@ export default Reflux.createStore({
     this.socket = new Phoenix.Socket("/status",{logger: (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }})
     var r = Math.floor((Math.random() * 1000) + 1);
     this.me = "me"+r
-
     this.auth = {user: this.me,pass: "the magic word"}
     this.socket.connect(this.auth)
     this.socket.onOpen(this.onOpen)
@@ -45,13 +42,6 @@ export default Reflux.createStore({
     console.log("update",update);
     console.log("this",this);
     this.trigger(update)
-  },
-  onLogin(username){
-    // login and setup listeners
-    //var chan = this.socket.channel("all",{})
-    //chan.on("status_user", data => {
-      //console.log("event",data);
-    //});
   },
   onHit(){
     this.user_chan.push("hit","hit")
