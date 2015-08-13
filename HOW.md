@@ -200,4 +200,81 @@ Elixir will take any call to Foo.bar(arg) and try to see if the argument fits a 
 
 Elixir map pattern matching allows you to look inside the argument and use different function definitions based on the keys of the map.  In this case we will only match #3 if we use a map as an argument, and that map has a key of :foo.  If we want access to the rest of the map we can use the arg varriable.  We can pass any map containing the key :foo %{foo: 1,bar: 2} will match, but %{"foo" => 1} will match #4 because the key is a binary (string).  When you are serializing data to javascript it is best to use binaries as strings.  Binaries also have very powerful pattern matching capabilites you may wan to explore.
 
-For phoenix channels we need join/3, and handle_in at a minimum.
+For phoenix channels we need join/3, and handle_in at a minimum.  
+
+``` elixir
+  def join("all",payload,socket) do
+    #  socket.assigns.user is assigned in our Socket
+    user = socket.assigns.user
+    
+    # register the login event with our Agent
+    LogAgent.login(user)
+    Logger.info "User #{user} logged in: payload: #{inspect p}"
+    
+    # we can't broadcast from here so we call to handle_info
+    send self,:status_update
+    
+    # return ok, and a "welcome" message to the client joining
+    {:ok,"welcome",socket}
+  end
+```
+
+In this commit I have a defunct catchall def join, below i've fixed it to catch any joins with the wrong channel name.  We could provide additional authentication checks in our first def join, and catch issues here.
+``` elixir
+  def join(any,s,socket) do
+    Logger.error("unkown channel: #{inspect any} for assigns #{inspect socket.assigns}") 
+    {:error, %{reason: "unauthorized"}}
+  end
+````
+
+Next is handle_info which broadcasts to all clients who have joined our "all" channel
+
+```elixir
+  def handle_info(:status_update,socket) do
+    Logger.info "handle_info :status_update"
+    
+    # broadcase!/3 sends an event "status_users" with the current state from our LogAgent
+    # it wouldn't be a bad idea to throttle this for a large number of clients
+    broadcast! socket, "status_users", LogAgent.get
+    
+    # we don't need a reply since we just used broadcast
+    {:noreply, socket}
+  end
+```
+
+I have added a few events in a number of handle_in/3 definitions. :status_update, "status_users","ping","hit", and any_event They all work pretty much the same, any_event is a catchall for errors.  Hit does the most work for our use case.  Notable here is the use of send.  This is generically the way Elixir processes communicate between each other.  In this case we use self() which returns the current PID, and matches to def handle_info(:status_update,socket).  You can read more about send [here](http://elixir-lang.org/getting-started/processes.html#send-and-receive)
+
+```elixir
+  def handle_in("hit",p,socket) do
+    Logger.info "Hit from #{socket.assigns.user}"
+    
+    # update our state
+    
+    LogAgent.hit
+    
+    # call the broadcast for all connected users
+    
+    send self,:status_update
+    {:noreply,socket}
+  end    
+```
+
+Finally for our Channel we need to handle clients leaving.  We define terminate/2 to update our state and user count
+```elixir
+  def terminate(reason,socket) do
+    # this test for assigns.user should never happen if our socket is doing it's job
+    
+    if socket.assigns.user != nil, do: LogAgent.logout(socket.assigns.user)
+    
+    Logger.info("terminated: #{inspect socket.assigns}")
+    
+    # I added this because I had some client terminations not notify, need to dig into why.  The messaging should 
+    # be asynchronus, so there is a chance the state is not updated when we call :status_update
+    :timer.sleep(50)
+    
+    # broadcast to all connected clients
+    send self,:status_update
+    :ok
+  end
+```
+
