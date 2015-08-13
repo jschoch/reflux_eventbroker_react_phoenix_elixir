@@ -59,7 +59,32 @@ We could also write this more verbose
 
 ### register a login: def login(user)
 
-This grabs a user and puts it into our state map.  One flaw to be fixed here is the fact that we don't check to see if the user is already logged in. 
+This grabs a user and puts it into our state map.  One flaw to be fixed here is the fact that we don't check to see if the user is already logged in. I
+
+If you are unfamiliar with Elixir or Erlang, the syntax for adding a user to our list may be confusing.  This is called a "cons cell", and it allows you to reference a list as a head and a tail.  When used on the left side of "=" it interpolates the first element of a list into the varriable on the left of the "|", and the rest of the list to the right.
+
+```elixir
+[head|tail] = [1,2,3,4,5]
+```
+head is now 1, and tail is now [2,3,4,5].  this is because "=" is not an assignment operator like most languages, but a pattern match.  
+
+When used on the right side of "=", or bare you prepend head to your list.
+
+```elixir
+# bare
+iex(7)> element = 1
+1
+iex(8)> list = [2,3,4]
+[2, 3, 4]
+iex(9)> [element|list]
+[1, 2, 3, 4]
+
+# right side of "="
+iex(10)> list = [1|[1,2,3]]
+[1, 1, 2, 3]
+```
+
+Back to our Agent...
 
 ```elixir
   def login(user) do
