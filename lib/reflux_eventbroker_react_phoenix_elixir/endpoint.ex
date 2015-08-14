@@ -4,6 +4,11 @@ defmodule RefluxEventbrokerReactPhoenixElixir.Endpoint do
   socket "/socket", RefluxEventbrokerReactPhoenixElixir.UserSocket
   #socket "/status",Reflux.PubChatSocket, check_origin: false
   socket "/status",Reflux.PubChatSocket
+  if (Mix.env == :prod) do
+    # hack for running under umbrella app
+    socket "/rerpe/socket", RefluxEventbrokerReactPhoenixElixir.UserSocket
+    socket "/rerpe/status",Reflux.PubChatSocket
+  end
   #Reflux.PubChatSocket
 
   # Serve at "/" the static files from "priv/static" directory.
