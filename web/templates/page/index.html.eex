@@ -1,3 +1,15 @@
 <div id="mydiv">
 our crap should go here
 </div>
+
+
+<% foo = "foo" %>
+
+<% 
+pre = ""
+case Mix.env do
+  :dev -> pre = "fun"
+  doh -> nil
+end
+%>
+<%= pre %>

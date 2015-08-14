@@ -34,6 +34,7 @@ config :reflux_eventbroker_react_phoenix_elixir, RefluxEventbrokerReactPhoenixEl
 # Do not print debug messages in production
 config :logger, level: :info
 
+config :reflux_eventbroker_react_phoenix_elixir, RefluxEventbrokerReactPhoenixElixir.Endpoint, server: false
 # ## Using releases
 #
 # If you are doing OTP releases, you need to instruct Phoenix
